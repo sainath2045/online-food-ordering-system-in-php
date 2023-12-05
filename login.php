@@ -23,34 +23,43 @@
 
 <body>
 <?php
-include("connection/connect.php"); //INCLUDE CONNECTION
-error_reporting(0); // hide undefine index errors
-session_start(); // temp sessions
-if(isset($_POST['submit']))   // if button is submit
-{
-	$username = $_POST['username'];  //fetch records from login form
-	$password = $_POST['password'];
-	
-	if(!empty($_POST["submit"]))   // if records were not empty
-     {
-	$loginquery ="SELECT * FROM users WHERE username='$username' && password='".md5($password)."'"; //selecting matching records
-	$result=mysqli_query($db, $loginquery); //executing
-	$row=mysqli_fetch_array($result);
-	
-	                        if(is_array($row))  // if matching records in the array & if everything is right
-								{
-                                    	$_SESSION["user_id"] = $row['u_id']; // put user id into temp session
-										 header("refresh:10;url=index.php"); // redirect to index.php page
-	                            } 
-							else
-							    {
-                                      	$message = "Invalid Username or Password!"; // throw error
-                                }
-	 }
-	
-	
+include("connection/connect.php"); // INCLUDE CONNECTION
+error_reporting(0); // HIDE UNDEFINE INDEX ERRORS
+session_start(); // TEMP SESSIONS
+
+if(isset($_POST['submit'])) { // IF BUTTON IS SUBMIT
+    $username = $_POST['username']; // FETCH RECORDS FROM LOGIN FORM
+    $password = $_POST['password'];
+
+    if(!empty($_POST["submit"])) { // IF RECORDS WERE NOT EMPTY
+
+        // USE PREPARED STATEMENTS TO AVOID SQL INJECTION
+        $loginquery = "SELECT u_id, password FROM users WHERE username=?";
+        $stmt = $db->prepare($loginquery);
+        $stmt->bind_param("s", $username);
+        $stmt->execute();
+        $stmt->store_result();
+        
+        if ($stmt->num_rows > 0) {
+            $stmt->bind_result($user_id, $hashed_password);
+            $stmt->fetch();
+
+            // USE PASSWORD_VERIFY TO COMPARE PASSWORDS (USING BCRYPT)
+            if (password_verify($password, $hashed_password)) {
+                $_SESSION["user_id"] = $user_id; // PUT USER ID INTO TEMP SESSION
+                header("refresh:1;url=index.php"); // REDIRECT TO INDEX.PHP PAGE
+            } else {
+                $message = "Invalid Username or Password!"; // THROW ERROR
+            }
+        } else {
+            $message = "Invalid Username or Password!"; // THROW ERROR
+        }
+
+        $stmt->close();
+    }
 }
 ?>
+
   
 <!-- Form Mixin-->
 <!-- Input Mixin-->
