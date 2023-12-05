@@ -5,11 +5,7 @@ include("connection/connect.php");
 include_once 'product-action.php';
 error_reporting(0);
 session_start();
-if(empty($_SESSION["user_id"]))
-{
-	header('location:login.php');
-}
-else{
+
 
 										  
 												foreach ($_SESSION["cart_item"] as $item)
@@ -309,5 +305,5 @@ else{
 </html>
 
 <?php
-}
+
 ?>
